@@ -1,3 +1,7 @@
+/**
+ * Public Domain License.
+ */
+
 #ifdef __cplusplus
 extern "C" {
 #endif
