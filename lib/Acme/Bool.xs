@@ -11,12 +11,17 @@ extern "C" {
 } /* extern "C" */
 #endif
 
+#define DEBUGGING
+#include "xsassert.h"
+
 #define NEED_newSVpvn_flags
 #include "ppport.h"
 
 static bool
 my_is_bool(pTHX_ SV* const sv) {
     const AMT* amt;
+    const MAGIC * mg;
+    const HV *stash;
 
     if(!SvROK(sv)){
         return FALSE;
@@ -36,8 +41,17 @@ my_is_bool(pTHX_ SV* const sv) {
     /* Return if the value does not have a magic */
     if(!SvAMAGIC(sv)) return FALSE;
 
+    stash = SvSTASH(SvRV(sv));
+    assert(stash);
+
+    if (Gv_AMG((HV*)stash) != 1) {
+        return FALSE;
+    }
+
     /* The value has 'bool' overloading */
-    amt = (AMT*)mg_find((SV*)SvSTASH(SvRV(sv)), PERL_MAGIC_overload_table)->mg_ptr;
+    mg = mg_find((const SV*)stash, PERL_MAGIC_overload_table);
+    assert(mg);
+    amt = (AMT*)mg->mg_ptr;
     assert(amt);
     assert(AMT_AMAGIC(amt));
     return amt->table[bool__amg] ? TRUE : FALSE;
